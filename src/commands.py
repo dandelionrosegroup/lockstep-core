@@ -24,7 +24,6 @@ Stage-adaptive parameter collection is a lockstep-core behavioral
 instruction, not per-command logic. The command schema is identical
 across stages; the interaction pattern changes.
 
-A1 resolution: /new-ticket includes description parameter.
 """
 
 from __future__ import annotations
@@ -91,8 +90,6 @@ def register_commands(mcp):
         ctx: Context = None,
     ) -> str:
         """Create a new ticket. Generic — human specifies everything.
-
-        A1 resolution: includes description parameter.
 
         If the ticket type triggers Lockstep threshold (not maintenance),
         returns a prompt suggesting chain creation. The Partner handles
