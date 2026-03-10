@@ -1,0 +1,31 @@
+{
+  "manifest_version": "0.2",
+  "name": "lockstep-chain-protocol",
+  "version": "0.1.0",
+  "description": "Chain-based project tracking for Human+AI collaboration. Structured session management with chains, tickets, capacity tracking, and session telemetry.",
+  "author": {
+    "name": "Jack Daniel Williams / Dandelion Rose Group, LLC",
+    "url": "https://github.com/dandelionrosegroup/lockstep-core"
+  },
+  "license": "GPL-3.0-or-later",
+  "server": {
+    "type": "python",
+    "entry_point": "src/server.py",
+    "mcp_config": {
+      "command": "uv",
+      "args": ["run", "--with", "mcp>=1.0.0", "--with", "pydantic>=2.0.0", "--with", "PyYAML>=6.0", "src/server.py"],
+      "env": {
+        "LOCKSTEP_DATA_DIR": "${user_config.data_directory}"
+      }
+    }
+  },
+  "user_config": {
+    "data_directory": {
+      "type": "directory",
+      "title": "Data Directory",
+      "description": "Where Lockstep stores chains, tickets, and capacity data",
+      "required": true,
+      "default": "${HOME}/.lockstep/data"
+    }
+  }
+}
