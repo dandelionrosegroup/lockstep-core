@@ -1,6 +1,7 @@
 {
   "manifest_version": "0.3",
   "name": "lockstep-chain-protocol",
+  "display_name": "Lockstep Core",
   "version": "0.1.0",
   "description": "Chain-based project tracking for Human+AI collaboration. Structured session management with chains, tickets, capacity tracking, and session telemetry.",
   "author": {
