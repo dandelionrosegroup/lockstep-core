@@ -32,7 +32,7 @@ Anyone using AI coding assistants (Claude, etc.) who's tired of re-explaining co
 
 ### MCPB Bundle (Manual)
 
-1. Download `lockstep-chain-protocol-0.1.0.mcpb` from the [latest release](https://github.com/dandelionrosegroup/lockstep-core/releases)
+1. Download `lockstep-core.mcpb` from the [latest release](https://github.com/dandelionrosegroup/lockstep-core/releases)
 2. Open it with Claude Desktop (double-click or drag in)
 3. When prompted, choose a data directory (default: `~/.lockstep/data`)
 
