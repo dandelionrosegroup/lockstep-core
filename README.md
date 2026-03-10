@@ -11,9 +11,26 @@ Anyone using AI coding assistants (Claude, etc.) who's tired of re-explaining co
 - Are neurodivergent and benefit from external scaffolding for executive function
 - Want your AI partner to track growth and capacity over time
 
-## Install
+## Features
 
-### MCPB Bundle (Claude Desktop)
+- **35 tools + 5 commands** for full project lifecycle management
+- **Chain-based tracking** — sessions link together as a chain of work
+- **Session types** — discovery, research, planning, architecture, build, review
+- **Structured handoffs** — decisions, files changed, open threads, and next-session recommendations transfer between conversations
+- **Capacity tracking** — growth stages (training-wheels → partnership → safety-net) with event logging
+- **Advisory, not enforcing** — the protocol flags and explains, never blocks
+- **Fully local** — all data stored as YAML files on your machine, no network access
+- **Human-readable data** — inspect, edit, or version-control your project data directly
+
+## Installation
+
+### From Anthropic Directory (Claude Desktop)
+
+1. Find "Lockstep Chain Protocol" in the Anthropic Directory
+2. Click Install
+3. When prompted, choose a data directory (default: `~/.lockstep/data`)
+
+### MCPB Bundle (Manual)
 
 1. Download `lockstep-chain-protocol-0.1.0.mcpb` from the [latest release](https://github.com/dandelionrosegroup/lockstep-core/releases)
 2. Open it with Claude Desktop (double-click or drag in)
@@ -45,28 +62,189 @@ Add to your Claude Desktop config (`claude_desktop_config.json`):
 }
 ```
 
-## Quick Start
+## Configuration
 
-Once installed, your AI assistant has access to 35 tools and 5 commands. Here's the typical flow:
+Lockstep needs one setting: a **data directory** where it stores chains, tickets, and capacity data.
 
-### 1. Create your first initiative
+- **Default:** `~/.lockstep/data`
+- **Custom:** Set `LOCKSTEP_DATA_DIR` environment variable or configure during MCPB install
+- Lockstep creates subdirectories automatically (`chains/`, `tickets/`, `capacity/`, `declarations/`, `handoffs/`, `catches/`, `archive/`)
 
-Tell your assistant:
+## Usage Examples
+
+### Example 1: Start a new initiative
+
+Create a ticket, chain, and first session in one command.
+
+**User prompt:**
 > "Create a new initiative called 'Build user authentication' with the vision 'Users can sign up, log in, and manage their accounts.'"
 
-This creates a ticket, a chain with the full-funnel template (Discovery → Research → Planning → Architecture → Build → Review), and starts a Discovery session.
+**Tool calls:** `cmd_new_initiative`
 
-### 2. Work through sessions
+**Input:**
+```json
+{
+  "title": "Build user authentication",
+  "vision": "Users can sign up, log in, and manage their accounts."
+}
+```
 
-Each session is a **link** in the chain. When you finish a session, record a handoff:
-> "Record a handoff for this session — we decided on JWT tokens, files changed were auth.py and models.py, and next session should be Planning."
+**Output:**
+```json
+{
+  "ok": true,
+  "data": {
+    "ticket_id": "TICKET-001",
+    "chain_id": "build-user-authentication",
+    "template": "full-funnel",
+    "first_session": "discovery",
+    "link_number": 1,
+    "message": "Initiative created. Discovery session is active. Record your session declaration."
+  }
+}
+```
 
-### 3. Pick up where you left off
+### Example 2: Record a handoff and check the dashboard
 
-Next conversation, your assistant can read the chain and last handoff to get full context:
-> "Read the chain for 'build-user-authentication' and show me the last handoff."
+Capture session context so the next conversation can pick up seamlessly.
 
-No more re-explaining. The chain remembers.
+**User prompt:**
+> "Record a handoff — we decided on JWT tokens and bcrypt for passwords. Files changed: auth.py (created), models.py (modified). Next session should be Planning. Then show me the dashboard."
+
+**Tool calls:** `record_handoff`, then `get_dashboard`
+
+**record_handoff input:**
+```json
+{
+  "chain_id": "build-user-authentication",
+  "session_type": "discovery",
+  "status": "complete",
+  "decisions_made": ["JWT tokens for auth", "bcrypt for password hashing"],
+  "files_changed": [
+    {"path": "auth.py", "action": "created"},
+    {"path": "models.py", "action": "modified"}
+  ],
+  "recommended_next_type": "planning",
+  "quick_start": "Planning session: define API routes, data models, and auth middleware based on JWT+bcrypt decisions from discovery."
+}
+```
+
+**record_handoff output:**
+```json
+{
+  "ok": true,
+  "data": {
+    "chain_id": "build-user-authentication",
+    "link_number": 1,
+    "status": "complete",
+    "handoff_path": "/home/user/.lockstep/data/handoffs/build-user-authentication-link-01-handoff.yaml"
+  }
+}
+```
+
+**get_dashboard output:**
+```json
+{
+  "ok": true,
+  "data": {
+    "active_chains": [
+      {
+        "chain_id": "build-user-authentication",
+        "title": "Build user authentication",
+        "status": "active",
+        "current_session_type": "discovery",
+        "link_count": 1,
+        "updated": "2026-03-10"
+      }
+    ],
+    "open_tickets": [
+      {
+        "ticket_id": "TICKET-001",
+        "title": "Build user authentication",
+        "type": "new-initiative",
+        "priority": "normal"
+      }
+    ],
+    "capacity_summary": [],
+    "stagnation_alerts": [],
+    "stale_chains": []
+  }
+}
+```
+
+### Example 3: Search chains and check health
+
+Find chains by status and detect stale or blocked work.
+
+**User prompt:**
+> "Search for all active chains, then check chain health with a 14-day stale threshold."
+
+**Tool calls:** `search_chains`, then `check_chain_health`
+
+**search_chains input:**
+```json
+{
+  "status": "active"
+}
+```
+
+**search_chains output:**
+```json
+{
+  "ok": true,
+  "data": {
+    "count": 2,
+    "chains": [
+      {
+        "chain_id": "build-user-authentication",
+        "title": "Build user authentication",
+        "status": "active",
+        "entity": null,
+        "created": "2026-03-10",
+        "link_count": 2,
+        "template": "full-funnel"
+      },
+      {
+        "chain_id": "refactor-database-layer",
+        "title": "Refactor database layer",
+        "status": "active",
+        "entity": "DR Technologies",
+        "created": "2026-02-15",
+        "link_count": 1,
+        "template": "refactor"
+      }
+    ]
+  }
+}
+```
+
+**check_chain_health input:**
+```json
+{
+  "stale_days": 14
+}
+```
+
+**check_chain_health output:**
+```json
+{
+  "ok": true,
+  "data": {
+    "healthy_count": 1,
+    "stale": [
+      {
+        "chain_id": "refactor-database-layer",
+        "title": "Refactor database layer",
+        "status": "active",
+        "days_stale": 23,
+        "last_updated": "2026-02-15"
+      }
+    ],
+    "blocked": [],
+    "stale_threshold_days": 14
+  }
+}
+```
 
 ## Tools Reference
 
@@ -159,6 +337,17 @@ All data is stored as YAML files in your configured data directory:
 ```
 
 YAML files are human-readable and version-controllable. No database required.
+
+## Privacy Policy
+
+Lockstep is a fully local MCP server. It collects no data, makes no network requests, and includes no telemetry. Your project data stays on your machine.
+
+Full policy: [PRIVACY.md](PRIVACY.md)
+
+## Support
+
+- **Issues:** [github.com/dandelionrosegroup/lockstep-core/issues](https://github.com/dandelionrosegroup/lockstep-core/issues)
+- **Discussions:** [github.com/dandelionrosegroup/lockstep-core/discussions](https://github.com/dandelionrosegroup/lockstep-core/discussions)
 
 ## Contributing
 

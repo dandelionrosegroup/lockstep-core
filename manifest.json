@@ -1,5 +1,5 @@
 {
-  "manifest_version": "0.2",
+  "manifest_version": "0.3",
   "name": "lockstep-chain-protocol",
   "version": "0.1.0",
   "description": "Chain-based project tracking for Human+AI collaboration. Structured session management with chains, tickets, capacity tracking, and session telemetry.",
@@ -8,6 +8,12 @@
     "url": "https://github.com/dandelionrosegroup/lockstep-core"
   },
   "license": "GPL-3.0-or-later",
+  "privacy_policies": [
+    {
+      "title": "Privacy Policy",
+      "url": "https://github.com/dandelionrosegroup/lockstep-core/blob/main/PRIVACY.md"
+    }
+  ],
   "server": {
     "type": "python",
     "entry_point": "src/server.py",
