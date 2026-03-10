@@ -10,10 +10,7 @@
   },
   "license": "GPL-3.0-or-later",
   "privacy_policies": [
-    {
-      "title": "Privacy Policy",
-      "url": "https://dandelionrosegroup.github.io/lockstep-core/privacy"
-    }
+    "https://dandelionrosegroup.github.io/lockstep-core/privacy"
   ],
   "server": {
     "type": "python",
