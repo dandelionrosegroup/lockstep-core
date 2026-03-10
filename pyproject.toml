@@ -1,0 +1,18 @@
+[project]
+name = "lockstep-chain-protocol"
+version = "0.1.0"
+description = "Chain-based project tracking for Human+AI collaboration. MCP server for structured session management."
+requires-python = ">=3.11"
+license = "GPL-3.0-or-later"
+dependencies = [
+    "mcp>=1.0.0",
+    "pydantic>=2.0.0",
+    "PyYAML>=6.0",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[project.scripts]
+lockstep-mcp = "src.server:main"
