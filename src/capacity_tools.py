@@ -109,7 +109,7 @@ def register_capacity_tools(mcp):
         annotations={
             "title": "Update Capacity Stage",
             "readOnlyHint": False,
-            "destructiveHint": False,
+            "destructiveHint": True,
             "idempotentHint": True,
             "openWorldHint": False,
         },
@@ -171,7 +171,7 @@ def register_capacity_tools(mcp):
         annotations={
             "title": "Record Capacity Event",
             "readOnlyHint": False,
-            "destructiveHint": False,
+            "destructiveHint": True,
             "idempotentHint": False,
             "openWorldHint": False,
         },

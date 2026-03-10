@@ -72,7 +72,7 @@ def register_chain_tools(mcp):
         annotations={
             "title": "Create Chain",
             "readOnlyHint": False,
-            "destructiveHint": False,
+            "destructiveHint": True,
             "idempotentHint": False,
             "openWorldHint": False,
         },
@@ -184,7 +184,7 @@ def register_chain_tools(mcp):
         annotations={
             "title": "Set Chain Status",
             "readOnlyHint": False,
-            "destructiveHint": False,
+            "destructiveHint": True,
             "idempotentHint": True,
             "openWorldHint": False,
         },
@@ -238,7 +238,7 @@ def register_chain_tools(mcp):
         annotations={
             "title": "Set Chain Entity",
             "readOnlyHint": False,
-            "destructiveHint": False,
+            "destructiveHint": True,
             "idempotentHint": True,
             "openWorldHint": False,
         },
@@ -267,7 +267,7 @@ def register_chain_tools(mcp):
         annotations={
             "title": "Update Chain Metadata",
             "readOnlyHint": False,
-            "destructiveHint": False,
+            "destructiveHint": True,
             "idempotentHint": True,
             "openWorldHint": False,
         },
@@ -312,7 +312,7 @@ def register_chain_tools(mcp):
         annotations={
             "title": "Add Chain Link",
             "readOnlyHint": False,
-            "destructiveHint": False,
+            "destructiveHint": True,
             "idempotentHint": False,
             "openWorldHint": False,
         },
@@ -362,7 +362,7 @@ def register_chain_tools(mcp):
         annotations={
             "title": "Complete Chain Link",
             "readOnlyHint": False,
-            "destructiveHint": False,
+            "destructiveHint": True,
             "idempotentHint": True,
             "openWorldHint": False,
         },
@@ -438,7 +438,7 @@ def register_chain_tools(mcp):
         annotations={
             "title": "Pause Chain",
             "readOnlyHint": False,
-            "destructiveHint": False,
+            "destructiveHint": True,
             "idempotentHint": True,
             "openWorldHint": False,
         },
@@ -483,7 +483,7 @@ def register_chain_tools(mcp):
         annotations={
             "title": "Resume Chain",
             "readOnlyHint": False,
-            "destructiveHint": False,
+            "destructiveHint": True,
             "idempotentHint": True,
             "openWorldHint": False,
         },
@@ -528,7 +528,7 @@ def register_chain_tools(mcp):
         annotations={
             "title": "Complete Chain",
             "readOnlyHint": False,
-            "destructiveHint": False,
+            "destructiveHint": True,
             "idempotentHint": True,
             "openWorldHint": False,
         },
@@ -589,7 +589,7 @@ def register_chain_tools(mcp):
         annotations={
             "title": "Archive Chain",
             "readOnlyHint": False,
-            "destructiveHint": False,
+            "destructiveHint": True,
             "idempotentHint": True,
             "openWorldHint": False,
         },
@@ -655,7 +655,7 @@ def register_chain_tools(mcp):
         annotations={
             "title": "Branch Chain",
             "readOnlyHint": False,
-            "destructiveHint": False,
+            "destructiveHint": True,
             "idempotentHint": False,
             "openWorldHint": False,
         },
@@ -710,7 +710,7 @@ def register_chain_tools(mcp):
         annotations={
             "title": "Rename Chain",
             "readOnlyHint": False,
-            "destructiveHint": False,
+            "destructiveHint": True,
             "idempotentHint": False,
             "openWorldHint": False,
         },

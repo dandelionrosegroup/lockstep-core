@@ -68,7 +68,7 @@ def register_session_tools(mcp):
         annotations={
             "title": "Record Session Declaration",
             "readOnlyHint": False,
-            "destructiveHint": False,
+            "destructiveHint": True,
             "idempotentHint": True,
             "openWorldHint": False,
         },
@@ -143,7 +143,7 @@ def register_session_tools(mcp):
         annotations={
             "title": "Record Handoff",
             "readOnlyHint": False,
-            "destructiveHint": False,
+            "destructiveHint": True,
             "idempotentHint": True,
             "openWorldHint": False,
         },
@@ -230,7 +230,7 @@ def register_session_tools(mcp):
         annotations={
             "title": "Record Gate Skip",
             "readOnlyHint": False,
-            "destructiveHint": False,
+            "destructiveHint": True,
             "idempotentHint": False,
             "openWorldHint": False,
         },
@@ -276,7 +276,7 @@ def register_session_tools(mcp):
         annotations={
             "title": "Record Catch Event",
             "readOnlyHint": False,
-            "destructiveHint": False,
+            "destructiveHint": True,
             "idempotentHint": False,
             "openWorldHint": False,
         },

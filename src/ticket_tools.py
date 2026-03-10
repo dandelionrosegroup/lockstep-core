@@ -60,7 +60,7 @@ def register_ticket_tools(mcp):
         annotations={
             "title": "Create Ticket",
             "readOnlyHint": False,
-            "destructiveHint": False,
+            "destructiveHint": True,
             "idempotentHint": False,
             "openWorldHint": False,
         },
@@ -116,7 +116,7 @@ def register_ticket_tools(mcp):
         annotations={
             "title": "Update Ticket",
             "readOnlyHint": False,
-            "destructiveHint": False,
+            "destructiveHint": True,
             "idempotentHint": True,
             "openWorldHint": False,
         },
@@ -160,7 +160,7 @@ def register_ticket_tools(mcp):
         annotations={
             "title": "Close Ticket",
             "readOnlyHint": False,
-            "destructiveHint": False,
+            "destructiveHint": True,
             "idempotentHint": True,
             "openWorldHint": False,
         },
@@ -218,7 +218,7 @@ def register_ticket_tools(mcp):
         annotations={
             "title": "Tag Ticket",
             "readOnlyHint": False,
-            "destructiveHint": False,
+            "destructiveHint": True,
             "idempotentHint": True,
             "openWorldHint": False,
         },
@@ -261,7 +261,7 @@ def register_ticket_tools(mcp):
         annotations={
             "title": "Link Ticket to Chain",
             "readOnlyHint": False,
-            "destructiveHint": False,
+            "destructiveHint": True,
             "idempotentHint": True,
             "openWorldHint": False,
         },

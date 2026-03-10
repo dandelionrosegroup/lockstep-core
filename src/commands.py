@@ -75,7 +75,7 @@ def register_commands(mcp):
         annotations={
             "title": "/new-ticket",
             "readOnlyHint": False,
-            "destructiveHint": False,
+            "destructiveHint": True,
             "idempotentHint": False,
             "openWorldHint": False,
         },
@@ -154,7 +154,7 @@ def register_commands(mcp):
         annotations={
             "title": "/new-initiative",
             "readOnlyHint": False,
-            "destructiveHint": False,
+            "destructiveHint": True,
             "idempotentHint": False,
             "openWorldHint": False,
         },
@@ -240,7 +240,7 @@ def register_commands(mcp):
         annotations={
             "title": "/enhancement",
             "readOnlyHint": False,
-            "destructiveHint": False,
+            "destructiveHint": True,
             "idempotentHint": False,
             "openWorldHint": False,
         },
@@ -318,7 +318,7 @@ def register_commands(mcp):
         annotations={
             "title": "/refactor",
             "readOnlyHint": False,
-            "destructiveHint": False,
+            "destructiveHint": True,
             "idempotentHint": False,
             "openWorldHint": False,
         },
@@ -396,7 +396,7 @@ def register_commands(mcp):
         annotations={
             "title": "/bug-fix",
             "readOnlyHint": False,
-            "destructiveHint": False,
+            "destructiveHint": True,
             "idempotentHint": False,
             "openWorldHint": False,
         },
