@@ -66,7 +66,7 @@ async def test_end_to_end():
         assert "chain_id" in r, f"Missing chain_id: {r}"
         ticket_id = r["ticket_id"]
         chain_id = r["chain_id"]
-        assert r["template"] == "full-funnel"
+        assert r["chain_type"] == "full-funnel"
         assert r["first_session"] == "discovery"
         print(f"   OK: ticket={ticket_id}, chain={chain_id}")
 
