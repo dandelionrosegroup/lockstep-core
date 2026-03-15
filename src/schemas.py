@@ -46,6 +46,12 @@ class ChainLinkStatus(str, Enum):
 
 
 class ChainTemplate(str, Enum):
+    """Deprecated in v2 — retained for migration compatibility.
+
+    Chain types are now defined by YAML templates in templates/.
+    Use Chain.chain_type (str) instead of Chain.template (ChainTemplate).
+    Will be removed after all v1 data is migrated.
+    """
     FULL_FUNNEL = "full-funnel"
     ENHANCEMENT = "enhancement"
     REFACTOR = "refactor"
@@ -200,7 +206,7 @@ class NextSession(BaseModel):
 
 # --- Top-level schemas ---
 
-SCHEMA_VERSION = "1.0"
+SCHEMA_VERSION = "2.0"
 
 
 class Chain(BaseModel):
@@ -217,12 +223,14 @@ class Chain(BaseModel):
     entity: Optional[str] = None
     created_by: Optional[str] = None
     completion_vision: str
-    template: Optional[ChainTemplate] = None
+    chain_type: Optional[str] = None
     expected_sequence: list[str] = Field(default_factory=list)
     links: list[ChainLink] = Field(default_factory=list)
     gate_skips: list[GateSkip] = Field(default_factory=list)
     parent_chain: Optional[str] = None
     child_chains: list[str] = Field(default_factory=list)
+    child_tickets: list[str] = Field(default_factory=list)
+    spawn_reason: Optional[str] = None
     capacity_role: Optional[str] = None
 
 
@@ -242,6 +250,16 @@ class Ticket(BaseModel):
     chain_status: Optional[str] = None
     description: Optional[str] = None
     notes: list[TicketNote] = Field(default_factory=list)
+
+    @property
+    def autonomous(self) -> bool:
+        """Derived property: bug-fix and maintenance tickets are autonomous-eligible.
+
+        Two-question filter (Decision 1):
+        1. Is there exactly one correct outcome? (Yes for these types)
+        2. Could a wrong decision misrepresent DRG's values? (No for these types)
+        """
+        return self.type in (TicketType.BUG_FIX, TicketType.MAINTENANCE)
 
 
 class CapacityFile(BaseModel):

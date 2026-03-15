@@ -35,7 +35,6 @@ from schemas import (
     CatchAction,
     CatchTrigger,
     ChainStatus,
-    ChainTemplate,
     HandoffStatus,
     PartnerAssessment,
     TicketPriority,
@@ -54,8 +53,8 @@ class CreateChainInput(BaseModel):
     completion_vision: str = Field(
         ..., description="What 'done' looks like for this chain"
     )
-    template: Optional[ChainTemplate] = Field(
-        None, description="Chain template: full-funnel, enhancement, refactor, bug-fix"
+    chain_type: Optional[str] = Field(
+        None, description="Chain type identifier (e.g. full-funnel, enhancement, refactor, bug-fix)"
     )
     expected_sequence: list[str] = Field(
         default_factory=list,
@@ -184,8 +183,11 @@ class BranchChainInput(BaseModel):
     ticket_id: Optional[str] = Field(
         None, description="Ticket ID for branch (inherits from parent if not provided)"
     )
-    template: Optional[ChainTemplate] = Field(
-        None, description="Chain template (inherits from parent if not provided)"
+    chain_type: Optional[str] = Field(
+        None, description="Chain type (inherits from parent if not provided)"
+    )
+    spawn_reason: Optional[str] = Field(
+        None, description="Why this fork was created — captures cross-type ideation patterns"
     )
 
 
@@ -262,6 +264,22 @@ class LinkTicketChainInput(BaseModel):
 
     ticket_id: str = Field(..., description="Ticket identifier")
     chain_id: str = Field(..., description="Chain identifier to link")
+
+
+class PromoteTicketInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    ticket_id: str = Field(..., description="Ticket to promote into a chain")
+    completion_vision: str = Field(
+        ..., description="What 'done' looks like for the resulting chain"
+    )
+    chain_type: Optional[str] = Field(
+        None, description="Chain type (inferred from ticket type if not provided)"
+    )
+    nest_tickets: list[str] = Field(
+        default_factory=list,
+        description="Ticket IDs to nest under the new chain immediately (from candidate list)",
+    )
 
 
 # --- Capacity Tracking Inputs (5 tools) ---

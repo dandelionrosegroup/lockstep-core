@@ -29,7 +29,7 @@ from typing import Optional
 
 import yaml
 
-from schemas import Chain, CapacityFile, Ticket
+from schemas import Chain, CapacityFile, SCHEMA_VERSION, Ticket
 
 
 # --- Naming Conventions ---
@@ -110,11 +110,42 @@ def _model_to_dict(model) -> dict:
 # -- Chain I/O --
 
 
+def _auto_migrate_chain(data: dict, path: Path) -> dict:
+    """Auto-migrate v1 chain data on read (Gap A). Writes updated file."""
+    if str(data.get("schema_version", "1.0")) >= SCHEMA_VERSION:
+        return data
+
+    # template → chain_type
+    if "template" in data:
+        data["chain_type"] = data.pop("template")
+
+    data["schema_version"] = SCHEMA_VERSION
+
+    with open(path, "w") as f:
+        f.write(_dump_yaml(data))
+
+    return data
+
+
+def _auto_migrate_ticket(data: dict, path: Path) -> dict:
+    """Auto-migrate v1 ticket data on read (Gap A). Writes updated file."""
+    if str(data.get("schema_version", "1.0")) >= SCHEMA_VERSION:
+        return data
+
+    data["schema_version"] = SCHEMA_VERSION
+
+    with open(path, "w") as f:
+        f.write(_dump_yaml(data))
+
+    return data
+
+
 def read_chain(data_dir: Path, chain_id: str) -> Chain:
     """Read a chain YAML file and return a validated Chain model."""
     path = chain_path(data_dir, chain_id)
     with open(path) as f:
         data = yaml.safe_load(f)
+    data = _auto_migrate_chain(data, path)
     return Chain(**data)
 
 
@@ -135,6 +166,7 @@ def read_ticket(data_dir: Path, ticket_id: str) -> Ticket:
     path = ticket_path(data_dir, ticket_id)
     with open(path) as f:
         data = yaml.safe_load(f)
+    data = _auto_migrate_ticket(data, path)
     return Ticket(**data)
 
 

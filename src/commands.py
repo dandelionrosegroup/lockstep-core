@@ -31,27 +31,19 @@ from __future__ import annotations
 from mcp.server.fastmcp import Context
 
 from errors import IO_ERROR, NOT_FOUND, error_response, success_response
-from schemas import ChainTemplate, TicketType
+from schemas import TicketType
 from storage import get_data_dir, read_chain, read_ticket
+from templates import get_sequence, get_template
 
 
-# --- Chain template mapping ---
+# --- Ticket type → chain type mapping ---
 
-TEMPLATE_SEQUENCES = {
-    ChainTemplate.FULL_FUNNEL: [
-        "discovery", "research", "planning", "architecture", "build", "review"
-    ],
-    ChainTemplate.ENHANCEMENT: ["planning", "architecture", "build", "review"],
-    ChainTemplate.REFACTOR: ["architecture", "build", "review"],
-    ChainTemplate.BUG_FIX: ["build", "review"],
-}
-
-TICKET_TYPE_TO_TEMPLATE = {
-    TicketType.NEW_INITIATIVE: ChainTemplate.FULL_FUNNEL,
-    TicketType.ENHANCEMENT: ChainTemplate.ENHANCEMENT,
-    TicketType.REFACTOR: ChainTemplate.REFACTOR,
-    TicketType.BUG_FIX: ChainTemplate.BUG_FIX,
-    # maintenance: no template (no chain)
+TICKET_TYPE_TO_CHAIN_TYPE = {
+    TicketType.NEW_INITIATIVE: "full-funnel",
+    TicketType.ENHANCEMENT: "enhancement",
+    TicketType.REFACTOR: "refactor",
+    TicketType.BUG_FIX: "bug-fix",
+    # maintenance: no chain type (no chain)
 }
 
 TICKET_TYPE_TO_FIRST_SESSION = {
@@ -140,10 +132,10 @@ def register_commands(mcp):
 
         # Lockstep threshold prompt (not maintenance)
         if ticket_type != TicketType.MAINTENANCE:
-            template = TICKET_TYPE_TO_TEMPLATE.get(ticket_type)
+            chain_type = TICKET_TYPE_TO_CHAIN_TYPE.get(ticket_type)
             result["lockstep_prompt"] = {
                 "message": "This ticket type supports Lockstep chain tracking. Create a chain?",
-                "suggested_template": template.value if template else None,
+                "suggested_chain_type": chain_type,
                 "suggested_first_session": TICKET_TYPE_TO_FIRST_SESSION.get(ticket_type),
             }
 
@@ -197,8 +189,8 @@ def register_commands(mcp):
 
         # 2. Create chain
         chain_id = to_kebab_case(title)
-        template = ChainTemplate.FULL_FUNNEL
-        sequence = TEMPLATE_SEQUENCES[template]
+        chain_type = "full-funnel"
+        sequence = get_sequence(chain_type) or []
 
         chain = Chain(
             chain_id=chain_id,
@@ -207,7 +199,7 @@ def register_commands(mcp):
             created=today,
             updated=today,
             completion_vision=vision,
-            template=template,
+            chain_type=chain_type,
             expected_sequence=sequence,
             entity=entity,
             links=[ChainLink(
@@ -229,7 +221,7 @@ def register_commands(mcp):
         return success_response({
             "ticket_id": ticket_id,
             "chain_id": chain_id,
-            "template": template.value,
+            "chain_type": chain_type,
             "first_session": "discovery",
             "link_number": 1,
             "message": "Initiative created. Discovery session is active. Record your session declaration.",
@@ -275,8 +267,8 @@ def register_commands(mcp):
         )
 
         chain_id = to_kebab_case(title)
-        template = ChainTemplate.ENHANCEMENT
-        sequence = TEMPLATE_SEQUENCES[template]
+        chain_type = "enhancement"
+        sequence = get_sequence(chain_type) or []
 
         chain = Chain(
             chain_id=chain_id,
@@ -285,7 +277,7 @@ def register_commands(mcp):
             created=today,
             updated=today,
             completion_vision=vision,
-            template=template,
+            chain_type=chain_type,
             expected_sequence=sequence,
             entity=entity,
             links=[ChainLink(
@@ -307,7 +299,7 @@ def register_commands(mcp):
         return success_response({
             "ticket_id": ticket_id,
             "chain_id": chain_id,
-            "template": template.value,
+            "chain_type": chain_type,
             "first_session": "planning",
             "link_number": 1,
             "message": "Enhancement created. Planning session is active. Record your session declaration.",
@@ -353,8 +345,8 @@ def register_commands(mcp):
         )
 
         chain_id = to_kebab_case(title)
-        template = ChainTemplate.REFACTOR
-        sequence = TEMPLATE_SEQUENCES[template]
+        chain_type = "refactor"
+        sequence = get_sequence(chain_type) or []
 
         chain = Chain(
             chain_id=chain_id,
@@ -363,7 +355,7 @@ def register_commands(mcp):
             created=today,
             updated=today,
             completion_vision=scope,
-            template=template,
+            chain_type=chain_type,
             expected_sequence=sequence,
             entity=entity,
             links=[ChainLink(
@@ -385,7 +377,7 @@ def register_commands(mcp):
         return success_response({
             "ticket_id": ticket_id,
             "chain_id": chain_id,
-            "template": template.value,
+            "chain_type": chain_type,
             "first_session": "architecture",
             "link_number": 1,
             "message": "Refactor created. Architecture session is active. Record your session declaration.",
@@ -440,8 +432,8 @@ def register_commands(mcp):
 
         if create_chain:
             chain_id = to_kebab_case(title)
-            template = ChainTemplate.BUG_FIX
-            sequence = TEMPLATE_SEQUENCES[template]
+            chain_type = "bug-fix"
+            sequence = get_sequence(chain_type) or []
 
             chain = Chain(
                 chain_id=chain_id,
@@ -450,7 +442,7 @@ def register_commands(mcp):
                 created=today,
                 updated=today,
                 completion_vision=description,
-                template=template,
+                chain_type=chain_type,
                 expected_sequence=sequence,
                 entity=entity,
                 links=[ChainLink(
@@ -472,7 +464,7 @@ def register_commands(mcp):
 
             result.update({
                 "chain_id": chain_id,
-                "template": template.value,
+                "chain_type": chain_type,
                 "first_session": "build",
                 "link_number": 1,
                 "message": "Bug-fix created with chain. Build session is active.",

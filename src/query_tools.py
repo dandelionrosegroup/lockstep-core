@@ -89,7 +89,7 @@ def register_query_tools(mcp):
                 "entity": chain.entity,
                 "created": str(chain.created),
                 "link_count": len(chain.links),
-                "template": chain.template.value if chain.template else None,
+                "chain_type": chain.chain_type,
             })
 
         return success_response({"count": len(results), "chains": results})

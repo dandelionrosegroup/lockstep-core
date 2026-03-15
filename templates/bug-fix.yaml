@@ -1,0 +1,15 @@
+chain_type: bug-fix
+display_name: Bug Fix
+phases: [build, review]
+autonomous_eligible: true
+required_fields:
+  - completion_vision
+optional_fields:
+  - capacity_role
+progressive_disclosure:
+  build:
+    show: [all]
+    prompt: null
+  review:
+    show: [all]
+    prompt: "Confirm the fix resolves the issue without regressions."

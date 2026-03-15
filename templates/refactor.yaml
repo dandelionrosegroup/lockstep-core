@@ -1,0 +1,19 @@
+chain_type: refactor
+display_name: Refactor
+phases: [architecture, build, review]
+autonomous_eligible: false
+required_fields:
+  - completion_vision
+optional_fields:
+  - capacity_role
+  - parent_chain
+progressive_disclosure:
+  architecture:
+    show: [completion_vision, entity, tags, capacity_role]
+    prompt: "Define what's being restructured and the target state."
+  build:
+    show: [all]
+    prompt: null
+  review:
+    show: [all]
+    prompt: "Verify the refactor preserves behavior while improving structure."

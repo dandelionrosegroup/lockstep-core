@@ -34,6 +34,7 @@ from chain_tools import register_chain_tools
 from commands import register_commands
 from query_tools import register_query_tools
 from session_tools import register_session_tools
+from templates import load_templates, validate_all_templates
 from ticket_tools import register_ticket_tools
 
 
@@ -84,8 +85,17 @@ async def app_lifespan(server):
     for subdir in subdirs:
         (data_dir / subdir).mkdir(parents=True, exist_ok=True)
 
+    # Load and validate chain type templates
+    templates = load_templates()
+    failures = validate_all_templates()
+    if failures:
+        import sys
+        for chain_type, errs in failures.items():
+            print(f"Template validation error [{chain_type}]: {errs}", file=sys.stderr)
+
     yield {
         "data_dir": data_dir,
+        "templates": templates,
     }
 
 

@@ -1,0 +1,22 @@
+chain_type: enhancement
+display_name: Enhancement
+phases: [planning, architecture, build, review]
+autonomous_eligible: false
+required_fields:
+  - completion_vision
+optional_fields:
+  - capacity_role
+  - parent_chain
+progressive_disclosure:
+  planning:
+    show: [completion_vision, entity, tags, capacity_role]
+    prompt: "Scope the enhancement — what changes, what stays the same?"
+  architecture:
+    show: [completion_vision, entity, tags, capacity_role, child_tickets, child_chains]
+    prompt: "Design how the enhancement integrates with existing systems."
+  build:
+    show: [all]
+    prompt: null
+  review:
+    show: [all]
+    prompt: "Validate the enhancement meets its completion vision."

@@ -1,0 +1,28 @@
+chain_type: full-funnel
+display_name: Full Funnel
+phases: [discovery, research, planning, architecture, build, review]
+autonomous_eligible: false
+required_fields:
+  - completion_vision
+optional_fields:
+  - capacity_role
+  - parent_chain
+progressive_disclosure:
+  discovery:
+    show: [completion_vision, entity, tags]
+    prompt: "Focus on understanding the problem space. What don't we know yet?"
+  research:
+    show: [completion_vision, entity, tags]
+    prompt: "Investigate specific unknowns surfaced in discovery."
+  planning:
+    show: [completion_vision, entity, tags, capacity_role, child_tickets]
+    prompt: "Break the work into concrete tasks with ordering and dependencies."
+  architecture:
+    show: [completion_vision, entity, tags, capacity_role, child_tickets, child_chains]
+    prompt: "Define the technical approach — component boundaries, interfaces, data flow."
+  build:
+    show: [all]
+    prompt: null
+  review:
+    show: [all]
+    prompt: "Validate deliverables against acceptance criteria."
