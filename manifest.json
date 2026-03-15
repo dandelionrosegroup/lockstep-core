@@ -2,8 +2,8 @@
   "manifest_version": "0.3",
   "name": "lockstep-chain-protocol",
   "display_name": "Lockstep Core",
-  "version": "0.1.0",
-  "description": "Chain-based project tracking for Human+AI collaboration. Structured session management with chains, tickets, capacity tracking, and session telemetry.",
+  "version": "0.2.0",
+  "description": "Chain-based project tracking for Human+AI collaboration. Structured session management with chains, tickets, capacity tracking, and session telemetry. Neurodivergent-first design with progressive disclosure and YAML-defined chain types.",
   "author": {
     "name": "Jack Daniel Williams / Dandelion Rose Group, LLC",
     "url": "https://github.com/dandelionrosegroup/lockstep-core"
@@ -17,7 +17,7 @@
     "entry_point": "src/server.py",
     "mcp_config": {
       "command": "uv",
-      "args": ["run", "--with", "mcp>=1.0.0", "--with", "pydantic>=2.0.0", "--with", "PyYAML>=6.0", "src/server.py"],
+      "args": ["run", "--python", "3.11", "--with", "mcp>=1.0.0", "--with", "pydantic>=2.0.0", "--with", "PyYAML>=6.0", "src/server.py"],
       "env": {
         "LOCKSTEP_DATA_DIR": "${user_config.data_directory}"
       }

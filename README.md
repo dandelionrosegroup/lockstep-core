@@ -13,8 +13,11 @@ Anyone using AI coding assistants (Claude, etc.) who's tired of re-explaining co
 
 ## Features
 
-- **35 tools + 5 commands** for full project lifecycle management
+- **37 tools + 5 commands** for full project lifecycle management
 - **Chain-based tracking** — sessions link together as a chain of work
+- **YAML-defined chain types** — full-funnel, enhancement, refactor, bug-fix out of the box, or create your own
+- **Progressive disclosure** — early phases show fewer fields to reduce cognitive load; information surfaces as it becomes relevant
+- **Ticket promotion** — standalone tickets can be promoted into chains when they grow; related tickets discovered automatically
 - **Session types** — discovery, research, planning, architecture, build, review
 - **Structured handoffs** — decisions, files changed, open threads, and next-session recommendations transfer between conversations
 - **Capacity tracking** — growth stages (training-wheels → partnership → safety-net) with event logging
@@ -26,7 +29,7 @@ Anyone using AI coding assistants (Claude, etc.) who's tired of re-explaining co
 
 ### From Anthropic Directory (Claude Desktop)
 
-1. Find "Lockstep Chain Protocol" in the Anthropic Directory
+1. Find "Lockstep Core" in the Anthropic Directory
 2. Click Install
 3. When prompted, choose a data directory (default: `~/.lockstep/data`)
 
@@ -52,7 +55,7 @@ Add to your Claude Desktop config (`claude_desktop_config.json`):
   "mcpServers": {
     "lockstep": {
       "command": "uv",
-      "args": ["run", "--with", "mcp>=1.0.0", "--with", "pydantic>=2.0.0", "--with", "PyYAML>=6.0", "src/server.py"],
+      "args": ["run", "--python", "3.11", "--with", "mcp>=1.0.0", "--with", "pydantic>=2.0.0", "--with", "PyYAML>=6.0", "src/server.py"],
       "cwd": "/path/to/lockstep-core",
       "env": {
         "LOCKSTEP_DATA_DIR": "/path/to/your/data"
@@ -72,16 +75,15 @@ Lockstep needs one setting: a **data directory** where it stores chains, tickets
 
 ## Usage Examples
 
-### Example 1: Start a new initiative
+### Start a new initiative
 
 Create a ticket, chain, and first session in one command.
 
 **User prompt:**
 > "Create a new initiative called 'Build user authentication' with the vision 'Users can sign up, log in, and manage their accounts.'"
 
-**Tool calls:** `cmd_new_initiative`
+**Tool call:** `cmd_new_initiative`
 
-**Input:**
 ```json
 {
   "title": "Build user authentication",
@@ -89,31 +91,63 @@ Create a ticket, chain, and first session in one command.
 }
 ```
 
-**Output:**
+**Response:**
 ```json
 {
-  "ok": true,
-  "data": {
-    "ticket_id": "TICKET-001",
-    "chain_id": "build-user-authentication",
-    "template": "full-funnel",
-    "first_session": "discovery",
-    "link_number": 1,
-    "message": "Initiative created. Discovery session is active. Record your session declaration."
-  }
+  "ticket_id": "TICKET-001",
+  "chain_id": "build-user-authentication",
+  "chain_type": "full-funnel",
+  "first_session": "discovery",
+  "link_number": 1,
+  "message": "Initiative created. Discovery session is active. Record your session declaration."
 }
 ```
 
-### Example 2: Record a handoff and check the dashboard
+### Promote a ticket into a chain
+
+When a standalone ticket grows in scope, promote it to get chain tracking with automatic discovery of related work.
+
+**User prompt:**
+> "Promote TICKET-005 into a chain. The completion vision is 'OAuth fully integrated and tested.'"
+
+**Tool call:** `promote_ticket`
+
+```json
+{
+  "ticket_id": "TICKET-005",
+  "completion_vision": "OAuth fully integrated and tested"
+}
+```
+
+**Response:**
+```json
+{
+  "promoted": true,
+  "ticket_id": "TICKET-005",
+  "chain_id": "add-oauth-support",
+  "chain_type": "enhancement",
+  "first_session": "planning",
+  "nesting_candidates": [
+    {
+      "ticket_id": "TICKET-008",
+      "title": "Review Auth Flows",
+      "shared_tags": ["auth"]
+    }
+  ],
+  "candidate_message": "Found 1 related ticket(s) that could be nested.",
+  "message": "Ticket promoted to chain 'add-oauth-support'. Planning session is active."
+}
+```
+
+### Record a handoff
 
 Capture session context so the next conversation can pick up seamlessly.
 
 **User prompt:**
-> "Record a handoff — we decided on JWT tokens and bcrypt for passwords. Files changed: auth.py (created), models.py (modified). Next session should be Planning. Then show me the dashboard."
+> "Record a handoff — we decided on JWT tokens and bcrypt for passwords. Files changed: auth.py (created), models.py (modified). Next session should be Planning."
 
-**Tool calls:** `record_handoff`, then `get_dashboard`
+**Tool call:** `record_handoff`
 
-**record_handoff input:**
 ```json
 {
   "chain_id": "build-user-authentication",
@@ -125,134 +159,17 @@ Capture session context so the next conversation can pick up seamlessly.
     {"path": "models.py", "action": "modified"}
   ],
   "recommended_next_type": "planning",
-  "quick_start": "Planning session: define API routes, data models, and auth middleware based on JWT+bcrypt decisions from discovery."
-}
-```
-
-**record_handoff output:**
-```json
-{
-  "ok": true,
-  "data": {
-    "chain_id": "build-user-authentication",
-    "link_number": 1,
-    "status": "complete",
-    "handoff_path": "/home/user/.lockstep/data/handoffs/build-user-authentication-link-01-handoff.yaml"
-  }
-}
-```
-
-**get_dashboard output:**
-```json
-{
-  "ok": true,
-  "data": {
-    "active_chains": [
-      {
-        "chain_id": "build-user-authentication",
-        "title": "Build user authentication",
-        "status": "active",
-        "current_session_type": "discovery",
-        "link_count": 1,
-        "updated": "2026-03-10"
-      }
-    ],
-    "open_tickets": [
-      {
-        "ticket_id": "TICKET-001",
-        "title": "Build user authentication",
-        "type": "new-initiative",
-        "priority": "normal"
-      }
-    ],
-    "capacity_summary": [],
-    "stagnation_alerts": [],
-    "stale_chains": []
-  }
-}
-```
-
-### Example 3: Search chains and check health
-
-Find chains by status and detect stale or blocked work.
-
-**User prompt:**
-> "Search for all active chains, then check chain health with a 14-day stale threshold."
-
-**Tool calls:** `search_chains`, then `check_chain_health`
-
-**search_chains input:**
-```json
-{
-  "status": "active"
-}
-```
-
-**search_chains output:**
-```json
-{
-  "ok": true,
-  "data": {
-    "count": 2,
-    "chains": [
-      {
-        "chain_id": "build-user-authentication",
-        "title": "Build user authentication",
-        "status": "active",
-        "entity": null,
-        "created": "2026-03-10",
-        "link_count": 2,
-        "template": "full-funnel"
-      },
-      {
-        "chain_id": "refactor-database-layer",
-        "title": "Refactor database layer",
-        "status": "active",
-        "entity": "DR Technologies",
-        "created": "2026-02-15",
-        "link_count": 1,
-        "template": "refactor"
-      }
-    ]
-  }
-}
-```
-
-**check_chain_health input:**
-```json
-{
-  "stale_days": 14
-}
-```
-
-**check_chain_health output:**
-```json
-{
-  "ok": true,
-  "data": {
-    "healthy_count": 1,
-    "stale": [
-      {
-        "chain_id": "refactor-database-layer",
-        "title": "Refactor database layer",
-        "status": "active",
-        "days_stale": 23,
-        "last_updated": "2026-02-15"
-      }
-    ],
-    "blocked": [],
-    "stale_threshold_days": 14
-  }
+  "quick_start": "Define API routes, data models, and auth middleware based on JWT+bcrypt decisions."
 }
 ```
 
 ## Tools Reference
 
-### Chain Lifecycle (14 tools)
+### Chain Lifecycle (15 tools)
 | Tool | Description |
 |------|-------------|
 | `create_chain` | Create a new chain from a ticket |
-| `read_chain` | Read full chain state |
+| `read_chain` | Read chain state (filtered by progressive disclosure) |
 | `get_chain_status` | Lightweight status check |
 | `set_chain_status` | Update chain status |
 | `set_chain_entity` | Tag chain with entity ownership |
@@ -261,20 +178,22 @@ Find chains by status and detect stale or blocked work.
 | `complete_chain_link` | Mark a link as complete |
 | `pause_chain` | Pause chain (preserves state) |
 | `resume_chain` | Resume a paused chain |
-| `complete_chain` | Mark entire chain complete |
+| `complete_chain` | Mark chain complete (auto-closes ticket for bug-fix/maintenance) |
 | `archive_chain` | Move to archive with retention metadata |
 | `branch_chain` | Fork when work splits |
+| `spawn_child_chain` | Cross-type fork with spawn reason (e.g. infrastructure → content) |
 | `rename_chain` | Rename chain and update all cross-references |
 
-### Ticket Lifecycle (6 tools)
+### Ticket Lifecycle (7 tools)
 | Tool | Description |
 |------|-------------|
 | `create_ticket` | Create ticket with auto-assigned ID |
 | `read_ticket` | Read full ticket state |
-| `update_ticket` | Update metadata and append notes |
+| `update_ticket` | Update metadata and append notes (returns promotion nudge at 3+ notes) |
 | `close_ticket` | Close ticket (advisory: flags if chain incomplete) |
-| `tag_ticket` | Add or remove tags |
-| `link_ticket_chain` | Associate ticket with chain |
+| `tag_ticket` | Add or remove tags (returns promotion nudge if applicable) |
+| `link_ticket_chain` | Associate ticket with chain (auto-detects child tickets) |
+| `promote_ticket` | Promote standalone ticket into a chain with candidate scanning |
 
 ### Capacity Tracking (5 tools)
 | Tool | Description |
@@ -292,7 +211,7 @@ Find chains by status and detect stale or blocked work.
 | `list_chains` | List all active chains |
 | `search_tickets` | Filter tickets by type, entity, priority |
 | `list_tickets` | List all open tickets |
-| `get_dashboard` | Overview of chains, tickets, capacity |
+| `get_dashboard` | Overview with progressive disclosure per chain phase |
 | `check_chain_health` | Find stale or blocked chains |
 
 ### Session Support (4 tools)
@@ -311,6 +230,76 @@ Find chains by status and detect stale or blocked work.
 | `cmd_enhancement` | Ticket + enhancement chain + planning session |
 | `cmd_refactor` | Ticket + refactor chain + architecture session |
 | `cmd_bug_fix` | Bug-fix ticket, optionally with chain |
+
+## Creating Custom Chain Types
+
+Chain types are defined as YAML files in `templates/`. Drop a new file to create a new chain type — no code changes required.
+
+### Template Format
+
+```yaml
+# templates/your-type.yaml
+chain_type: your-type
+display_name: Your Type
+phases: [planning, build, review]
+autonomous_eligible: false
+required_fields:
+  - completion_vision
+optional_fields:
+  - capacity_role
+  - parent_chain
+progressive_disclosure:
+  planning:
+    show: [completion_vision, entity, tags]
+    prompt: "What are we building and why?"
+  build:
+    show: [all]
+    prompt: null
+  review:
+    show: [all]
+    prompt: "Does this meet the completion vision?"
+```
+
+### Fields
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `chain_type` | Yes | Unique identifier (kebab-case) |
+| `display_name` | Yes | Human-readable name |
+| `phases` | Yes | Ordered list of session types this chain walks through |
+| `autonomous_eligible` | No | Can AI proceed without human review? (default: false) |
+| `required_fields` | No | Fields required at chain creation |
+| `optional_fields` | No | Fields that may be set later |
+| `progressive_disclosure` | No | Per-phase field visibility and prompts |
+
+### Progressive Disclosure
+
+Each phase can define:
+- **`show`**: List of chain fields visible during this phase. Use `[all]` to show everything.
+- **`prompt`**: Optional guidance text surfaced to the AI partner during this phase.
+
+Available fields for `show`: `completion_vision`, `entity`, `tags`, `capacity_role`, `parent_chain`, `child_chains`, `child_tickets`, `spawn_reason`, `expected_sequence`, `gate_skips`, `all`.
+
+Core structural fields (`chain_id`, `title`, `status`, `links`, etc.) are always visible regardless of disclosure rules.
+
+### Built-in Chain Types
+
+| Type | Phases | Autonomous |
+|------|--------|-----------|
+| `full-funnel` | discovery → research → planning → architecture → build → review | No |
+| `enhancement` | planning → architecture → build → review | No |
+| `refactor` | architecture → build → review | No |
+| `bug-fix` | build → review | Yes |
+
+## Migrating from v0.1.0
+
+If you have existing v0.1.0 data, run the migration script:
+
+```bash
+python scripts/migrate_v1_to_v2.py ~/.lockstep/data
+```
+
+This creates a backup, renames `template` to `chain_type`, and bumps the schema version. The server also auto-migrates any v1 files it encounters on read, so migration is optional but recommended for clean data.
 
 ## Design Principles
 
@@ -358,13 +347,15 @@ Lockstep is GPL v3 licensed. Contributions welcome.
 git clone https://github.com/dandelionrosegroup/lockstep-core.git
 cd lockstep-core
 python3 -m venv .venv
-.venv/bin/pip install mcp pydantic PyYAML pytest pytest-asyncio
+.venv/bin/pip install mcp pydantic PyYAML
 
 # Run tests
-.venv/bin/python3 -m pytest tests/ -v
+python3 tests/test_integration.py
+python3 tests/test_phase2_promotion.py
+python3 tests/test_phase3_disclosure.py
 ```
 
-Check [open issues](https://github.com/dandelionrosegroup/lockstep-core/issues) for good places to start. Issues tagged `good first issue` are well-scoped and documented.
+Check [open issues](https://github.com/dandelionrosegroup/lockstep-core/issues) for good places to start.
 
 ## License
 
