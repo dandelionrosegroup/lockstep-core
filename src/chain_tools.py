@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-"""Chain lifecycle tools (14 tools).
+"""Chain lifecycle tools (15 tools).
 
 All tools return structured JSON, never prose.
 No-delete policy: archive, never destroy.
@@ -60,12 +60,13 @@ from tool_inputs import (
     ResumeChainInput,
     SetChainEntityInput,
     SetChainStatusInput,
+    SpawnChildChainInput,
     UpdateChainMetadataInput,
 )
 
 
 def register_chain_tools(mcp):
-    """Register all 14 chain lifecycle tools on the FastMCP instance."""
+    """Register all 15 chain lifecycle tools on the FastMCP instance."""
 
     @mcp.tool(
         name="create_chain",
@@ -135,7 +136,13 @@ def register_chain_tools(mcp):
         },
     )
     async def read_chain_tool(params: ReadChainInput, ctx: Context) -> str:
-        """Read full chain state including all links, metadata, and status."""
+        """Read chain state filtered through progressive disclosure.
+
+        Early-phase chains show fewer fields to reduce cognitive load.
+        Full data always accessible via direct YAML read.
+        """
+        from templates import apply_disclosure
+
         data_dir = get_data_dir(ctx)
         try:
             chain = read_chain(data_dir, params.chain_id)
@@ -143,7 +150,9 @@ def register_chain_tools(mcp):
             return error_response(
                 NOT_FOUND, f"Chain '{params.chain_id}' not found"
             )
-        return success_response(chain.model_dump(mode="json", exclude_none=True))
+        chain_dict = chain.model_dump(mode="json", exclude_none=True)
+        disclosed = apply_disclosure(chain_dict)
+        return success_response(disclosed)
 
     @mcp.tool(
         name="get_chain_status",
@@ -534,7 +543,13 @@ def register_chain_tools(mcp):
         },
     )
     async def complete_chain(params: CompleteChainInput, ctx: Context) -> str:
-        """Mark entire chain complete. Advisory: warns if child chains incomplete."""
+        """Mark entire chain complete. Lifecycle hooks per Decision 1.
+
+        Bug-fix/maintenance chains: auto-close associated ticket.
+        Other chain types: advisory suggesting ticket closure.
+        """
+        from templates import is_autonomous_eligible
+
         data_dir = get_data_dir(ctx)
         try:
             chain = read_chain(data_dir, params.chain_id)
@@ -579,6 +594,27 @@ def register_chain_tools(mcp):
             "status": "complete",
             "changed": True,
         }
+
+        # Lifecycle hooks (Task 3d): auto-close for autonomous types, advisory for others
+        auto_close = is_autonomous_eligible(chain.chain_type) if chain.chain_type else False
+        if chain.ticket_id:
+            try:
+                ticket = read_ticket(data_dir, chain.ticket_id)
+                if ticket.status.value != "closed":
+                    if auto_close:
+                        from schemas import TicketStatus
+                        ticket.status = TicketStatus.CLOSED
+                        ticket.closed = date.today()
+                        ticket.chain_status = "complete"
+                        write_ticket(data_dir, ticket)
+                        result["ticket_auto_closed"] = ticket.ticket_id
+                    else:
+                        advisories.append(
+                            f"Chain complete — consider closing ticket '{ticket.ticket_id}'"
+                        )
+            except FileNotFoundError:
+                pass
+
         if advisories:
             result["advisories"] = advisories
 
@@ -704,6 +740,83 @@ def register_chain_tools(mcp):
             "parent_chain_id": parent.chain_id,
             "child_chain_id": child_id,
             "child_status": child.status.value,
+        })
+
+    @mcp.tool(
+        name="spawn_child_chain",
+        annotations={
+            "title": "Spawn Child Chain",
+            "readOnlyHint": False,
+            "destructiveHint": True,
+            "idempotentHint": False,
+            "openWorldHint": False,
+        },
+    )
+    async def spawn_child_chain(
+        params: SpawnChildChainInput, ctx: Context
+    ) -> str:
+        """Fork a chain when work needs a different type (Decision 5).
+
+        Type changes create child chains; parent retains its type and
+        history. spawn_reason is required — it's what makes cross-domain
+        ideation patterns researchable.
+        """
+        from templates import get_sequence
+
+        data_dir = get_data_dir(ctx)
+        try:
+            parent = read_chain(data_dir, params.parent_chain_id)
+        except FileNotFoundError:
+            return error_response(
+                NOT_FOUND, f"Parent chain '{params.parent_chain_id}' not found"
+            )
+
+        child_id = to_kebab_case(params.title)
+        if chain_path(data_dir, child_id).exists():
+            return error_response(
+                ALREADY_EXISTS,
+                f"Chain '{child_id}' already exists",
+            )
+
+        sequence = get_sequence(params.chain_type) or []
+        first_session = sequence[0] if sequence else "build"
+
+        today = date.today()
+        child = Chain(
+            chain_id=child_id,
+            title=params.title,
+            ticket_id=params.ticket_id or parent.ticket_id,
+            created=today,
+            updated=today,
+            completion_vision=params.completion_vision,
+            chain_type=params.chain_type,
+            expected_sequence=sequence,
+            spawn_reason=params.spawn_reason,
+            entity=parent.entity,
+            created_by=parent.created_by,
+            parent_chain=parent.chain_id,
+            capacity_role=parent.capacity_role,
+            links=[ChainLink(
+                link_number=1,
+                session_type=first_session,
+                started=today,
+            )],
+        )
+
+        write_chain(data_dir, child)
+
+        parent.child_chains.append(child_id)
+        parent.updated = today
+        write_chain(data_dir, parent)
+
+        return success_response({
+            "parent_chain_id": parent.chain_id,
+            "child_chain_id": child_id,
+            "child_chain_type": params.chain_type,
+            "spawn_reason": params.spawn_reason,
+            "first_session": first_session,
+            "link_number": 1,
+            "message": f"Child chain spawned from '{parent.chain_id}'. {first_session.title()} session is active.",
         })
 
     @mcp.tool(

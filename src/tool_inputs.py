@@ -191,6 +191,25 @@ class BranchChainInput(BaseModel):
     )
 
 
+class SpawnChildChainInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    parent_chain_id: str = Field(..., description="Parent chain to spawn from")
+    title: str = Field(..., description="Title for the child chain")
+    completion_vision: str = Field(
+        ..., description="What 'done' looks like for the child chain"
+    )
+    chain_type: str = Field(
+        ..., description="Chain type for the child (can differ from parent — fork, never morph)"
+    )
+    spawn_reason: str = Field(
+        ..., description="WHY this fork happened — captures cross-domain ideation patterns"
+    )
+    ticket_id: Optional[str] = Field(
+        None, description="Ticket ID for child (inherits from parent if not provided)"
+    )
+
+
 class RenameChainInput(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -198,7 +217,7 @@ class RenameChainInput(BaseModel):
     new_title: str = Field(..., description="New title (will be converted to kebab-case for the new chain_id)")
 
 
-# --- Ticket Lifecycle Inputs (6 tools) ---
+# --- Ticket Lifecycle Inputs (7 tools) ---
 
 
 class CreateTicketInput(BaseModel):

@@ -29,6 +29,7 @@ from mcp.server.fastmcp import Context
 
 from errors import NOT_FOUND, error_response, success_response
 from schemas import ChainStatus, TicketStatus
+from templates import disclosure_summary
 from storage import (
     get_data_dir,
     list_capacity_files,
@@ -241,14 +242,19 @@ def register_query_tools(mcp):
                 if active:
                     current_type = active[-1].session_type
 
-            summary = {
-                "chain_id": chain.chain_id,
-                "title": chain.title,
-                "status": chain.status.value,
-                "current_session_type": current_type,
-                "link_count": len(chain.links),
-                "updated": str(chain.updated),
-            }
+            # Build base summary, then apply progressive disclosure
+            chain_dict = chain.model_dump(mode="json", exclude_none=True)
+            summary = disclosure_summary(chain_dict)
+
+            # Ensure dashboard essentials are present (disclosure_summary may simplify)
+            summary.setdefault("chain_id", chain.chain_id)
+            summary.setdefault("title", chain.title)
+            summary.setdefault("status", chain.status.value)
+            summary.setdefault("current_session_type", current_type)
+            summary.setdefault("link_count", len(chain.links))
+            summary.setdefault("updated", str(chain.updated))
+            if "current_session_type" not in summary:
+                summary["current_session_type"] = current_type
 
             if chain.status in (ChainStatus.ACTIVE, ChainStatus.PAUSED, ChainStatus.BLOCKED):
                 active_chains.append(summary)

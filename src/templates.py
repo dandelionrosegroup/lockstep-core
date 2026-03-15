@@ -137,6 +137,141 @@ def is_autonomous_eligible(chain_type: str) -> bool:
     return template.autonomous_eligible if template else False
 
 
+# --- Progressive Disclosure ---
+
+# Fields always shown regardless of disclosure phase
+_STRUCTURAL_FIELDS = {
+    "schema_version", "chain_id", "title", "ticket_id", "status",
+    "created", "updated", "completed", "archived", "chain_type",
+    "links",
+}
+
+# Fields gated by progressive disclosure
+_DISCLOSABLE_FIELDS = {
+    "completion_vision", "entity", "tags", "capacity_role",
+    "parent_chain", "child_chains", "child_tickets", "spawn_reason",
+    "expected_sequence", "gate_skips",
+}
+
+
+def get_current_phase(chain_data: dict) -> Optional[str]:
+    """Determine the current phase from the chain's active link."""
+    links = chain_data.get("links", [])
+    for link in reversed(links):
+        status = link.get("status", link) if isinstance(link, dict) else getattr(link, "status", None)
+        session_type = link.get("session_type") if isinstance(link, dict) else getattr(link, "session_type", None)
+        status_val = status.value if hasattr(status, "value") else str(status)
+        if status_val == "active":
+            return session_type
+    # Fallback: last link's session type
+    if links:
+        last = links[-1]
+        return last.get("session_type") if isinstance(last, dict) else getattr(last, "session_type", None)
+    return None
+
+
+def apply_disclosure(chain_dict: dict, chain_type: Optional[str] = None) -> dict:
+    """Filter a chain dict through progressive disclosure rules.
+
+    Returns a new dict with only phase-relevant fields shown.
+    If no template or no disclosure rules, returns the full dict unchanged.
+    Adds _disclosure metadata to the response.
+    """
+    if not chain_type:
+        chain_type = chain_dict.get("chain_type")
+    if not chain_type:
+        return chain_dict
+
+    template = get_template(chain_type)
+    if not template or not template.progressive_disclosure:
+        return chain_dict
+
+    current_phase = get_current_phase(chain_dict)
+    if not current_phase:
+        return chain_dict
+
+    pd = template.progressive_disclosure.get(current_phase)
+    if not pd:
+        return chain_dict
+
+    # "all" means no filtering
+    if "all" in pd.show:
+        result = dict(chain_dict)
+        if pd.prompt:
+            result["_disclosure"] = {"phase": current_phase, "prompt": pd.prompt}
+        return result
+
+    # Build filtered dict: structural fields + disclosed fields
+    result = {}
+    show_set = set(pd.show)
+
+    for key, value in chain_dict.items():
+        if key in _STRUCTURAL_FIELDS:
+            result[key] = value
+        elif key in show_set:
+            result[key] = value
+        # Skip undisclosed fields silently
+
+    # Add disclosure metadata
+    result["_disclosure"] = {
+        "phase": current_phase,
+        "visible_fields": sorted(show_set & _DISCLOSABLE_FIELDS),
+    }
+    if pd.prompt:
+        result["_disclosure"]["prompt"] = pd.prompt
+
+    return result
+
+
+def disclosure_summary(chain_dict: dict, chain_type: Optional[str] = None) -> dict:
+    """Lightweight disclosure for dashboard — returns minimal fields for early phases."""
+    if not chain_type:
+        chain_type = chain_dict.get("chain_type")
+    if not chain_type:
+        return chain_dict
+
+    template = get_template(chain_type)
+    if not template or not template.progressive_disclosure:
+        return chain_dict
+
+    current_phase = get_current_phase(chain_dict)
+    if not current_phase:
+        return chain_dict
+
+    pd = template.progressive_disclosure.get(current_phase)
+    if not pd or "all" in pd.show:
+        return chain_dict
+
+    # For dashboard: only include chain_id, title, status, current phase, link_count
+    # Plus completion_vision if disclosed
+    summary = {
+        "chain_id": chain_dict.get("chain_id"),
+        "title": chain_dict.get("title"),
+        "status": chain_dict.get("status"),
+        "current_phase": current_phase,
+        "link_count": len(chain_dict.get("links", [])),
+        "updated": chain_dict.get("updated"),
+    }
+
+    if "completion_vision" in pd.show:
+        summary["completion_vision"] = chain_dict.get("completion_vision")
+    if "entity" in pd.show:
+        summary["entity"] = chain_dict.get("entity")
+    if "child_tickets" in pd.show:
+        child_tickets = chain_dict.get("child_tickets", [])
+        if child_tickets:
+            summary["child_ticket_count"] = len(child_tickets)
+    if "child_chains" in pd.show:
+        child_chains = chain_dict.get("child_chains", [])
+        if child_chains:
+            summary["child_chain_count"] = len(child_chains)
+
+    if pd.prompt:
+        summary["_prompt"] = pd.prompt
+
+    return summary
+
+
 # --- Validation ---
 
 
