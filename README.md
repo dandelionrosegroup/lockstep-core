@@ -23,6 +23,7 @@ Anyone using AI coding assistants (Claude, etc.) who's tired of re-explaining co
 - **Capacity tracking** — growth stages (training-wheels → partnership → safety-net) with event logging
 - **Advisory, not enforcing** — the protocol flags and explains, never blocks
 - **Fully local** — all data stored as YAML files on your machine, no network access
+- **Cross-platform** — tested on macOS, Windows 11, and Linux (x64 and ARM)
 - **Human-readable data** — inspect, edit, or version-control your project data directly
 
 ## Installation
@@ -41,14 +42,22 @@ Anyone using AI coding assistants (Claude, etc.) who's tired of re-explaining co
 
 ### Manual Setup
 
-Requires [uv](https://docs.astral.sh/uv/) and Python 3.11+.
+Requires [uv](https://docs.astral.sh/uv/) and Python 3.11+. Works on macOS, Windows, and Linux.
 
 ```bash
 git clone https://github.com/dandelionrosegroup/lockstep-core.git
 cd lockstep-core
 ```
 
-Add to your Claude Desktop config (`claude_desktop_config.json`):
+Add to your Claude Desktop config:
+
+| Platform | Config Location |
+|----------|----------------|
+| macOS | `~/Library/Application Support/Claude/claude_desktop_config.json` |
+| Windows | `%APPDATA%\Claude\claude_desktop_config.json` |
+| Linux | `~/.config/Claude/claude_desktop_config.json` |
+
+**macOS / Linux:**
 
 ```json
 {
@@ -64,6 +73,25 @@ Add to your Claude Desktop config (`claude_desktop_config.json`):
   }
 }
 ```
+
+**Windows:**
+
+```json
+{
+  "mcpServers": {
+    "lockstep": {
+      "command": "uv",
+      "args": ["run", "--python", "3.11", "--with", "mcp>=1.0.0", "--with", "pydantic>=2.0.0", "--with", "PyYAML>=6.0", "src/server.py"],
+      "cwd": "C:\\Users\\you\\Projects\\lockstep-core",
+      "env": {
+        "LOCKSTEP_DATA_DIR": "C:\\Users\\you\\.lockstep\\data"
+      }
+    }
+  }
+}
+```
+
+> **Note:** On Windows, use double backslashes (`\\`) or forward slashes (`/`) in JSON paths.
 
 ## Configuration
 
@@ -340,19 +368,21 @@ Full policy: [PRIVACY.md](PRIVACY.md)
 
 ## Contributing
 
-Lockstep is GPL v3 licensed. Contributions welcome.
+Lockstep is GPL v3 licensed. Contributions welcome. Tested on macOS, Windows 11, and Linux.
 
 ```bash
 # Set up development environment
 git clone https://github.com/dandelionrosegroup/lockstep-core.git
 cd lockstep-core
-python3 -m venv .venv
-.venv/bin/pip install mcp pydantic PyYAML
 
-# Run tests
-python3 tests/test_integration.py
-python3 tests/test_phase2_promotion.py
-python3 tests/test_phase3_disclosure.py
+# Run tests (uv handles dependencies automatically)
+uv run --python 3.11 --with mcp --with pydantic --with PyYAML python tests/test_integration.py
+uv run --python 3.11 --with mcp --with pydantic --with PyYAML python tests/test_phase2_promotion.py
+uv run --python 3.11 --with mcp --with pydantic --with PyYAML python tests/test_phase3_disclosure.py
+
+# Or run all tests with pytest (requires pytest + pytest-asyncio)
+uv run --python 3.11 --with mcp --with pydantic --with PyYAML --with pytest --with pytest-asyncio \
+  python -m pytest tests/ -v
 ```
 
 Check [open issues](https://github.com/dandelionrosegroup/lockstep-core/issues) for good places to start.
