@@ -1,5 +1,5 @@
 {
-  "manifest_version": "0.3",
+  "manifest_version": "0.4",
   "name": "lockstep-chain-protocol",
   "display_name": "Lockstep Core",
   "version": "0.2.0",
@@ -13,7 +13,7 @@
     "https://dandelionrosegroup.github.io/lockstep-core/privacy"
   ],
   "server": {
-    "type": "python",
+    "type": "uv",
     "entry_point": "src/server.py",
     "mcp_config": {
       "command": "uv",
@@ -22,6 +22,9 @@
         "LOCKSTEP_DATA_DIR": "${user_config.data_directory}"
       }
     }
+  },
+  "compatibility": {
+    "platforms": ["darwin", "win32", "linux"]
   },
   "user_config": {
     "data_directory": {
