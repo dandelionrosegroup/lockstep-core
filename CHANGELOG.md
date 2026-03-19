@@ -80,6 +80,14 @@ not a rewrite.
   `schema_version`, and preserves all existing data. Rollback is one command
   away if anything goes wrong.
 
+- **Cross-platform support** — verified on macOS (ARM), Windows 11 Pro (x64),
+  and Linux. 51 tests pass on all platforms with zero platform-specific
+  failures. Manifest upgraded to v0.4 with explicit `compatibility.platforms`
+  declaration (`darwin`, `win32`, `linux`) and `"uv"` server type, which lets
+  the host application manage Python and dependencies automatically across
+  platforms. This resolves the v0.1.0 known issue of untested Windows
+  installation — Windows is now a first-class platform.
+
 - **GitHub Actions CI** — automated test suite runs on every push and pull
   request across Python 3.11, 3.12, and 3.13. Four test files, 50 tests
   covering integration, promotion, progressive disclosure, spawning, and
@@ -111,10 +119,13 @@ not a rewrite.
   surfacing promotion candidates based on shared tags.
 
 - **README** — complete overhaul with usage examples, custom chain type docs,
-  migration instructions, tools reference table, and contributing guide.
+  migration instructions, tools reference table, contributing guide, and
+  platform-specific installation instructions for macOS, Windows, and Linux.
 
-- **Manifest** — Python version pinned to 3.11 (`--python 3.11` in mcp_config
-  args) for consistent cross-platform behavior.
+- **Manifest** — upgraded to v0.4 spec with `server.type: "uv"` (host manages
+  Python runtime) and `compatibility.platforms: ["darwin", "win32", "linux"]`.
+  Python version pinned to 3.11 in mcp_config args. MCPB bundle rebuilds
+  cleanly at ~115KB.
 
 - **Version** — bumped to 0.2.0 in pyproject.toml and manifest.json.
 
@@ -248,8 +259,8 @@ shipping sooner rather than later:
 - No progressive disclosure — all chain fields shown regardless of phase,
   increasing cognitive load during early exploratory work. (Fixed in v0.2.0.)
 - Windows installation untested — the manifest assumed macOS/Linux uv paths.
-  (Partially addressed in v0.2.0 with Python version pinning; full Windows
-  validation pending.)
+  (**Resolved in v0.2.0:** 51/51 tests pass on Windows 11 Pro; manifest
+  upgraded to v0.4 with explicit cross-platform declarations.)
 
 ---
 
