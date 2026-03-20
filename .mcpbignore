@@ -13,3 +13,5 @@ tests/
 .vscode/
 .pytest_cache/
 *.mcpb
+icon-drafts/
+GEMINI_PROMPT.md
