@@ -9,6 +9,7 @@
     "url": "https://github.com/dandelionrosegroup/lockstep-core"
   },
   "license": "GPL-3.0-or-later",
+  "icon": "icon.png",
   "privacy_policies": [
     "https://dandelionrosegroup.github.io/lockstep-core/privacy"
   ],
