@@ -20,6 +20,18 @@
       "args": ["run", "--python", "3.11", "--with", "mcp>=1.0.0", "--with", "pydantic>=2.0.0", "--with", "PyYAML>=6.0", "src/server.py"],
       "env": {
         "LOCKSTEP_DATA_DIR": "${user_config.data_directory}"
+      },
+      "platform_overrides": {
+        "darwin": {
+          "env": {
+            "PATH": "/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/homebrew/bin:${HOME}/.local/bin"
+          }
+        },
+        "linux": {
+          "env": {
+            "PATH": "/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:${HOME}/.local/bin"
+          }
+        }
       }
     }
   },

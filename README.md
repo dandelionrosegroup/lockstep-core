@@ -67,12 +67,15 @@ Add to your Claude Desktop config:
       "args": ["run", "--python", "3.11", "--with", "mcp>=1.0.0", "--with", "pydantic>=2.0.0", "--with", "PyYAML>=6.0", "src/server.py"],
       "cwd": "/path/to/lockstep-core",
       "env": {
-        "LOCKSTEP_DATA_DIR": "/path/to/your/data"
+        "LOCKSTEP_DATA_DIR": "/path/to/your/data",
+        "PATH": "/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/homebrew/bin:~/.local/bin"
       }
     }
   }
 }
 ```
+
+> **Important:** Claude Desktop is a GUI app and does not inherit your shell's PATH. The `PATH` entry above ensures `uv` (typically installed at `~/.local/bin/uv`) is discoverable. If you installed uv via Homebrew, `/opt/homebrew/bin` covers that path.
 
 **Windows:**
 
@@ -92,6 +95,17 @@ Add to your Claude Desktop config:
 ```
 
 > **Note:** On Windows, use double backslashes (`\\`) or forward slashes (`/`) in JSON paths.
+
+### Troubleshooting
+
+**"uv: command not found" or server fails to start:**
+Claude Desktop doesn't inherit your terminal's PATH. Make sure `uv` is findable:
+- **macOS/Linux:** Add the `PATH` env var as shown in the config example above, or use the full path to uv (e.g., `"command": "/Users/you/.local/bin/uv"`)
+- **Windows:** The uv installer usually adds itself to the system PATH. If not, use the full path (e.g., `"command": "C:\\Users\\you\\.local\\bin\\uv.exe"`)
+
+**Server starts but immediately disconnects:**
+- Verify Python 3.11+ is available: `uv python list` (uv will auto-download if needed thanks to the `--python 3.11` flag)
+- Check Claude Desktop's MCP logs: `~/Library/Logs/Claude/mcp*.log` (macOS) or `%APPDATA%\Claude\logs\` (Windows)
 
 ## Configuration
 
