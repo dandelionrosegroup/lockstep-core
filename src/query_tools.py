@@ -32,6 +32,7 @@ from schemas import ChainStatus, TicketStatus
 from templates import disclosure_summary
 from storage import (
     get_data_dir,
+    get_resolution_method,
     list_capacity_files,
     list_chain_files,
     list_ticket_files,
@@ -222,6 +223,7 @@ def register_query_tools(mcp):
         picture in one call.
         """
         data_dir = get_data_dir(ctx)
+        resolution_method = get_resolution_method(ctx)
 
         # Active chains
         active_chains = []
@@ -307,6 +309,10 @@ def register_query_tools(mcp):
             "capacity_summary": capacity_summary,
             "stagnation_alerts": stagnation_alerts,
             "stale_chains": stale_chains,
+            "diagnostics": {
+                "data_dir": str(data_dir),
+                "resolution_method": resolution_method,
+            },
         })
 
     @mcp.tool(

@@ -38,18 +38,23 @@ from templates import load_templates, validate_all_templates
 from ticket_tools import register_ticket_tools
 
 
-def _resolve_data_dir() -> Path:
+def _resolve_data_dir() -> dict:
     """Resolve the data directory for chain/ticket/capacity storage.
 
     Resolution order:
     1. LOCKSTEP_DATA_DIR environment variable (set by MCPB user_config)
     2. config.json adjacent to server.py (for local development)
     3. Default: ~/.lockstep/data
+
+    Returns dict with 'path' (Path) and 'method' (str) for diagnostics.
     """
     # 1. Environment variable override (MCPB bundle sets this)
     env_dir = os.environ.get("LOCKSTEP_DATA_DIR")
     if env_dir:
-        return Path(os.path.expanduser(env_dir))
+        return {
+            "path": Path(os.path.expanduser(env_dir)),
+            "method": "env",
+        }
 
     # 2. Config file (local development convenience)
     config_path = Path(__file__).parent / "config.json"
@@ -59,17 +64,26 @@ def _resolve_data_dir() -> Path:
         if "data_dir" in config:
             data_dir = config["data_dir"]
             if not os.path.isabs(data_dir):
-                return Path(__file__).parent / data_dir
-            return Path(os.path.expanduser(data_dir))
+                resolved = Path(__file__).parent / data_dir
+            else:
+                resolved = Path(os.path.expanduser(data_dir))
+            return {"path": resolved, "method": "config"}
 
     # 3. Default
-    return Path.home() / ".lockstep" / "data"
+    return {
+        "path": Path.home() / ".lockstep" / "data",
+        "method": "default",
+    }
 
 
 @asynccontextmanager
 async def app_lifespan(server):
     """Initialize data directories and yield shared state."""
-    data_dir = _resolve_data_dir()
+    import sys
+
+    resolved = _resolve_data_dir()
+    data_dir = resolved["path"]
+    resolution_method = resolved["method"]
 
     # Ensure directory structure exists
     subdirs = [
@@ -85,16 +99,37 @@ async def app_lifespan(server):
     for subdir in subdirs:
         (data_dir / subdir).mkdir(parents=True, exist_ok=True)
 
+    # Startup diagnostics: warn if default path has no existing data
+    if resolution_method == "default":
+        chains_dir = data_dir / "chains"
+        tickets_dir = data_dir / "tickets"
+        chain_count = len(list(chains_dir.glob("CHAIN-*.yaml")))
+        ticket_count = len(list(tickets_dir.glob("TICKET-*.yaml")))
+        if chain_count == 0 and ticket_count == 0:
+            print(
+                f"[lockstep] Warning: Using default data directory with no "
+                f"existing data: {data_dir}\n"
+                f"[lockstep] If upgrading from v0.1.0, set LOCKSTEP_DATA_DIR "
+                f"environment variable or create config.json.\n"
+                f"[lockstep] See UPGRADE.md for migration instructions.",
+                file=sys.stderr,
+            )
+
+    print(
+        f"[lockstep] Data directory: {data_dir} (resolved via: {resolution_method})",
+        file=sys.stderr,
+    )
+
     # Load and validate chain type templates
     templates = load_templates()
     failures = validate_all_templates()
     if failures:
-        import sys
         for chain_type, errs in failures.items():
             print(f"Template validation error [{chain_type}]: {errs}", file=sys.stderr)
 
     yield {
         "data_dir": data_dir,
+        "resolution_method": resolution_method,
         "templates": templates,
     }
 

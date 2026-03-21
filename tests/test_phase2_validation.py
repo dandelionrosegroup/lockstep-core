@@ -28,7 +28,10 @@ from server import mcp  # noqa: E402
 class FakeContext:
     def __init__(self, data_dir: Path):
         self.request_context = MagicMock()
-        self.request_context.lifespan_context = {"data_dir": data_dir}
+        self.request_context.lifespan_context = {
+            "data_dir": data_dir,
+            "resolution_method": "test",
+        }
 
 
 def setup_data_dir() -> Path:

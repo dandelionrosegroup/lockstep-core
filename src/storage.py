@@ -89,6 +89,11 @@ def get_data_dir(ctx) -> Path:
     return ctx.request_context.lifespan_context["data_dir"]
 
 
+def get_resolution_method(ctx) -> str:
+    """Extract data directory resolution method from lifespan context."""
+    return ctx.request_context.lifespan_context.get("resolution_method", "unknown")
+
+
 # --- YAML I/O ---
 
 

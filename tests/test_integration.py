@@ -25,7 +25,10 @@ class FakeContext:
 
     def __init__(self, data_dir: Path):
         self.request_context = MagicMock()
-        self.request_context.lifespan_context = {"data_dir": data_dir}
+        self.request_context.lifespan_context = {
+            "data_dir": data_dir,
+            "resolution_method": "test",
+        }
 
 
 def setup_data_dir() -> Path:
@@ -142,7 +145,10 @@ async def test_end_to_end():
         )
         assert len(r["active_chains"]) >= 1, f"No active chains: {r}"
         assert len(r["open_tickets"]) >= 1, f"No open tickets: {r}"
-        print(f"   OK: dashboard shows {len(r['active_chains'])} chains, {len(r['open_tickets'])} tickets")
+        assert "diagnostics" in r, "Dashboard missing diagnostics block"
+        assert r["diagnostics"]["resolution_method"] == "test"
+        assert "data_dir" in r["diagnostics"]
+        print(f"   OK: dashboard shows {len(r['active_chains'])} chains, {len(r['open_tickets'])} tickets, data_dir={r['diagnostics']['data_dir']}")
 
         # === 7. Query: search_chains ===
         print("7. Testing search_chains...")
