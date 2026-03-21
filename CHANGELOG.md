@@ -16,6 +16,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.2.1] — 2026-03-21
+
+Patch release. Megan suggested testing Lockstep from a "break it" perspective —
+someone who isn't the creator, upgrading from v0.1.0 to v0.2.0 cold. What
+happened: empty dashboard, zero data visible, no errors. The server started
+fine but silently fell through to a default empty data directory instead of the
+one configured in Claude Desktop's settings UI.
+
+Root cause: an MCPB interpolation bug where `${user_config.*}` values in the
+manifest env block are not resolved into the spawned process environment (even
+though `${HOME}` in the same block resolves correctly). This has been reported
+upstream to the MCPB project. But a silent failure with no diagnostic output
+is unacceptable regardless of cause — so this patch makes the failure visible.
+
+### Added
+
+- **Startup diagnostics** — `_resolve_data_dir()` now returns metadata about
+  *how* the data directory was resolved (env var, config file, or default
+  fallback). The resolution method is logged to stderr on every server start
+  and included in every `get_dashboard` response as a `diagnostics` block.
+  If the server falls through to the default directory and it's empty, a
+  warning is emitted. Silent data path failures are no longer silent.
+  (TICKET-101)
+
+- **UPGRADE.md** — step-by-step migration guide for v0.1.0 → v0.2.0 upgrades,
+  including three configuration methods (MCPB settings UI, config.json, env
+  var), the known MCPB interpolation bug and its workaround, and a "my data
+  appears lost" troubleshooting scenario. (TICKET-102)
+
+### Changed
+
+- **`get_dashboard` response** — now includes a `diagnostics` object with
+  `data_dir` (resolved path) and `resolution_method` (how it was found).
+  Consumers can surface this to help users verify their configuration.
+
+---
+
 ## [0.2.0] — 2026-03-15
 
 The "Tickets Grow Up" release. Everything we learned from daily-driving v0.1.0
@@ -269,5 +306,6 @@ shipping sooner rather than later:
 - **Repository:** https://github.com/dandelionrosegroup/lockstep-core
 - **Issues:** https://github.com/dandelionrosegroup/lockstep-core/issues
 
+[0.2.1]: https://github.com/dandelionrosegroup/lockstep-core/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/dandelionrosegroup/lockstep-core/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/dandelionrosegroup/lockstep-core/releases/tag/v0.1.0

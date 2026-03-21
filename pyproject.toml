@@ -1,6 +1,6 @@
 [project]
 name = "lockstep-chain-protocol"
-version = "0.2.0"
+version = "0.2.1"
 description = "Chain-based project tracking for Human+AI collaboration. MCP server for structured session management."
 requires-python = ">=3.11"
 license = "GPL-3.0-or-later"

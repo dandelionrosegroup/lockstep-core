@@ -1,45 +1,45 @@
-# Lockstep Core v0.2.0 — "Tickets Grow Up"
+# Lockstep Core v0.2.1 — Patch Release
 
 Chain-based project tracking for Human+AI collaboration. An MCP server that gives your AI assistant persistent memory across sessions.
 
-## What's new in v0.2.0
+## What's in this patch
 
-**Tickets become chains.** The biggest gap in v0.1.0 was that tickets couldn't grow. Now they can — `promote_ticket` turns any standalone ticket into a full chain when the work outgrows its original scope, with automatic scanning for related tickets to nest.
+**Startup diagnostics.** When we tested v0.2.0 from a fresh user perspective (not the creator's), the server started with an empty dashboard and no errors. Data wasn't lost — the server had silently resolved to a default empty directory instead of the configured one. That kind of silent failure is unacceptable.
 
-**Chain types are YAML, not code.** Four built-in templates (full-funnel, enhancement, refactor, bug-fix) ship out of the box. Need a custom workflow? Drop a `.yaml` file in `templates/` — no code changes, no version bump.
+Now every server startup logs its data directory and *how* it was resolved (environment variable, config file, or default fallback). The `get_dashboard` response includes a `diagnostics` block so you can verify your configuration is working. If the server falls back to a default empty directory, it warns you.
 
-**Progressive disclosure.** Early-phase work shows only what matters. Discovery sessions surface completion vision and tags; build phases expand to show everything. Less noise when you're exploring, full detail when you're executing.
+**UPGRADE.md.** Step-by-step migration guide for v0.1.0 → v0.2.0 upgrades covering three configuration methods, the known MCPB interpolation bug and its workaround, and troubleshooting for the "my data appears lost" scenario.
 
-**Cross-platform support.** Tested on macOS (ARM), Windows 11 Pro (x64), and Linux. 51 tests, zero platform-specific failures. The manifest now declares explicit compatibility and uses the `uv` server type for host-managed Python across all platforms.
+## Known Issue: MCPB `user_config` interpolation
 
-## Highlights
+There is a confirmed bug in MCPB where `${user_config.*}` values in the manifest env block are **not interpolated** into the spawned process environment. This means the `LOCKSTEP_DATA_DIR` env var set through Claude Desktop's settings UI may not reach the server. This has been reported upstream.
 
-- **Ticket promotion** — tickets grow into chains with candidate scanning and nesting
-- **YAML-defined chain types** — add new workflow types without touching code
-- **Progressive disclosure** — per-phase field visibility reduces cognitive load
-- **Child chain spawning** — cross-type forks that preserve lineage
-- **Advisory nudges** — soft suggestions when tickets are ready for promotion
-- **Schema migration** — v1 → v2 auto-migration with backup script
-- **Cross-platform** — verified on macOS, Windows 11, and Linux
-- **42 tools + 5 commands** for full project lifecycle management
+**Workaround:** Create a `config.json` file in your data directory:
+```json
+// Create src/config.json adjacent to server.py
+{
+  "data_dir": "/path/to/your/lockstep/data"
+}
+```
+
+This bypasses MCPB interpolation entirely. The server checks config.json before falling back to the default directory. See [UPGRADE.md](UPGRADE.md) for full details.
+
+## Upgrading
+
+If you're already on v0.2.0, this is a drop-in replacement — no data migration needed.
+
+If upgrading from v0.1.0, see [UPGRADE.md](UPGRADE.md) for the complete migration guide.
 
 ## Install
 
 ### MCPB Bundle (Recommended)
 1. Download `lockstep-core.mcpb` from the assets below
 2. Open it with Claude Desktop (double-click or drag in)
-3. When prompted, choose a data directory (default: `~/.lockstep/data`)
+3. When prompted, set your data directory
+4. Call `get_dashboard` — check the `diagnostics` block to confirm your path
 
 ### Manual Setup
-See the [README](README.md) for platform-specific instructions (macOS, Windows, Linux).
-
-## Upgrading from v0.1.0
-
-Your existing data works as-is — the server auto-migrates v1 files on read. For a clean migration:
-
-```bash
-python scripts/migrate_v1_to_v2.py ~/.lockstep/data
-```
+See the [README](README.md) for platform-specific instructions.
 
 Full changelog: [CHANGELOG.md](CHANGELOG.md)
 
