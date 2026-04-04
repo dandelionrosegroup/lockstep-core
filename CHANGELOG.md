@@ -16,6 +16,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Planned]
+
+### Added
+- **Session Trees** — structured in-session capture documents attached to chain
+  links. Each session gets a `[session_type].session-tree.md` with trunk (main
+  discussion) and Branch Topics (tangents captured mid-session). Binary triage
+  at session end: "Yes, but" (promote to ticket) or "No, but" (leave in place,
+  findable via semantic search). Designed for neurodivergent workflows where
+  tangential thinking is a feature, not a bug. Replaces Session Maps and
+  Breakout Sessions. *Conceived by Jack Williams, 2026-04-04.*
+
+---
+
 ## [0.2.1] — 2026-03-21
 
 Patch release. Megan suggested testing Lockstep from a "break it" perspective —
